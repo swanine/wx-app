@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wxapp.mapper.EvaluateInfoMapper">
+  <resultMap id="BaseResultMap" type="com.wxapp.domain.EvaluateInfo">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="project_name" jdbcType="VARCHAR" property="projectName" />
+    <result column="sc_no" jdbcType="VARCHAR" property="scNo" />
+    <result column="device_num" jdbcType="INTEGER" property="deviceNum" />
+    <result column="employee_name" jdbcType="INTEGER" property="employeeName" />
+    <result column="user_num" jdbcType="INTEGER" property="userNum" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+    <result column="service_score" jdbcType="INTEGER" property="serviceScore" />
+    <result column="response_score" jdbcType="INTEGER" property="responseScore" />
+    <result column="is_time_complete" jdbcType="INTEGER" property="isTimeComplete" />
+    <result column="feedback" jdbcType="VARCHAR" property="feedback" />
+    <result column="commit_user_sign" jdbcType="VARCHAR" property="commitUserSign" />
+    <result column="contact_phone" jdbcType="VARCHAR" property="contactPhone" />
+    <result column="service_done" jdbcType="INTEGER" property="serviceDone" />
+    <result column="state" jdbcType="INTEGER" property="state" />
+    <result column="commit_time" jdbcType="TIMESTAMP" property="commitTime" />
+    <result column="feedback_time" jdbcType="TIMESTAMP" property="feedbackTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, project_name, sc_no, device_num, employee_name,user_num, remark, service_score, response_score,
+    is_time_complete, feedback, commit_user_sign, contact_phone, service_done, `state`, 
+    commit_time, feedback_time
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from evaluate_info
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectListPage" resultType="com.wxapp.domain.EvaluateInfo">
+    select id, project_name, sc_no,`state`, employee_name,commit_time, feedback_time,service_score, response_score
+    from evaluate_info
+    <where>
+      <if test="evaluateReq.scNo !=null and evaluateReq.scNo!=''">
+        and sc_no like CONCAT('%',#{evaluateReq.scNo},'%')
+      </if>
+      <if test="evaluateReq.startTime != null and evaluateReq.endTime!= null">
+        and commit_time BETWEEN #{evaluateReq.startTime} AND #{evaluateReq.endTime}
+      </if>
+    </where>
+  </select>
+  <select id="selectCountByParam" resultType="java.lang.Integer">
+    select count(1)
+    from evaluate_info
+    <where>
+    <if test="evaluateReq.scNo !=null and evaluateReq.scNo!=''">
+      and sc_no like CONCAT('%',#{evaluateReq.scNo},'%')
+    </if>
+    <if test="evaluateReq.startTime != null and evaluateReq.endTime!= null">
+      and commit_time BETWEEN #{evaluateReq.startTime} AND #{evaluateReq.endTime}
+    </if>
+    </where>
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from evaluate_info
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.wxapp.domain.EvaluateInfo" useGeneratedKeys="true">
+    insert into evaluate_info (project_name, sc_no, device_num, employee_name,
+      user_num, remark, service_score, 
+      response_score, is_time_complete, feedback, 
+      commit_user_sign, contact_phone, service_done, 
+      `state`, commit_time, feedback_time
+      )
+    values (#{projectName,jdbcType=VARCHAR}, #{scNo,jdbcType=VARCHAR}, #{deviceNum,jdbcType=INTEGER},
+        #{employeeName,jdbcType=VARCHAR},#{userNum,jdbcType=INTEGER}, #{remark,jdbcType=VARCHAR}, #{serviceScore,jdbcType=INTEGER},
+      #{responseScore,jdbcType=INTEGER}, #{isTimeComplete,jdbcType=INTEGER}, #{feedback,jdbcType=VARCHAR}, 
+      #{commitUserSign,jdbcType=VARCHAR}, #{contactPhone,jdbcType=VARCHAR}, #{serviceDone,jdbcType=INTEGER}, 
+      #{state,jdbcType=INTEGER}, #{commitTime,jdbcType=TIMESTAMP}, #{feedbackTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.wxapp.domain.EvaluateInfo" useGeneratedKeys="true">
+    insert into evaluate_info
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="projectName != null">
+        project_name,
+      </if>
+      <if test="scNo != null">
+        sc_no,
+      </if>
+      <if test="deviceNum != null">
+        device_num,
+      </if>
+      <if test="userNum != null">
+        user_num,
+      </if>
+      <if test="remark != null">
+        remark,
+      </if>
+      <if test="serviceScore != null">
+        service_score,
+      </if>
+      <if test="responseScore != null">
+        response_score,
+      </if>
+      <if test="isTimeComplete != null">
+        is_time_complete,
+      </if>
+      <if test="feedback != null">
+        feedback,
+      </if>
+      <if test="commitUserSign != null">
+        commit_user_sign,
+      </if>
+      <if test="contactPhone != null">
+        contact_phone,
+      </if>
+      <if test="serviceDone != null">
+        service_done,
+      </if>
+      <if test="state != null">
+        `state`,
+      </if>
+      <if test="commitTime != null">
+        commit_time,
+      </if>
+      <if test="feedbackTime != null">
+        feedback_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="projectName != null">
+        #{projectName,jdbcType=VARCHAR},
+      </if>
+      <if test="scNo != null">
+        #{scNo,jdbcType=VARCHAR},
+      </if>
+      <if test="deviceNum != null">
+        #{deviceNum,jdbcType=INTEGER},
+      </if>
+      <if test="userNum != null">
+        #{userNum,jdbcType=INTEGER},
+      </if>
+      <if test="remark != null">
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceScore != null">
+        #{serviceScore,jdbcType=INTEGER},
+      </if>
+      <if test="responseScore != null">
+        #{responseScore,jdbcType=INTEGER},
+      </if>
+      <if test="isTimeComplete != null">
+        #{isTimeComplete,jdbcType=INTEGER},
+      </if>
+      <if test="feedback != null">
+        #{feedback,jdbcType=VARCHAR},
+      </if>
+      <if test="commitUserSign != null">
+        #{commitUserSign,jdbcType=VARCHAR},
+      </if>
+      <if test="contactPhone != null">
+        #{contactPhone,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceDone != null">
+        #{serviceDone,jdbcType=INTEGER},
+      </if>
+      <if test="state != null">
+        #{state,jdbcType=INTEGER},
+      </if>
+      <if test="commitTime != null">
+        #{commitTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="feedbackTime != null">
+        #{feedbackTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.wxapp.domain.EvaluateInfo">
+    update evaluate_info
+    <set>
+      <if test="projectName != null">
+        project_name = #{projectName,jdbcType=VARCHAR},
+      </if>
+      <if test="scNo != null">
+        sc_no = #{scNo,jdbcType=VARCHAR},
+      </if>
+      <if test="deviceNum != null">
+        device_num = #{deviceNum,jdbcType=INTEGER},
+      </if>
+      <if test="userNum != null">
+        user_num = #{userNum,jdbcType=INTEGER},
+      </if>
+      <if test="remark != null">
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceScore != null">
+        service_score = #{serviceScore,jdbcType=INTEGER},
+      </if>
+      <if test="responseScore != null">
+        response_score = #{responseScore,jdbcType=INTEGER},
+      </if>
+      <if test="isTimeComplete != null">
+        is_time_complete = #{isTimeComplete,jdbcType=INTEGER},
+      </if>
+      <if test="feedback != null">
+        feedback = #{feedback,jdbcType=VARCHAR},
+      </if>
+      <if test="commitUserSign != null">
+        commit_user_sign = #{commitUserSign,jdbcType=VARCHAR},
+      </if>
+      <if test="contactPhone != null">
+        contact_phone = #{contactPhone,jdbcType=VARCHAR},
+      </if>
+      <if test="serviceDone != null">
+        service_done = #{serviceDone,jdbcType=INTEGER},
+      </if>
+      <if test="state != null">
+        `state` = #{state,jdbcType=INTEGER},
+      </if>
+      <if test="commitTime != null">
+        commit_time = #{commitTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="feedbackTime != null">
+        feedback_time = #{feedbackTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.wxapp.domain.EvaluateInfo">
+    update evaluate_info
+    set project_name = #{projectName,jdbcType=VARCHAR},
+      sc_no = #{scNo,jdbcType=VARCHAR},
+      device_num = #{deviceNum,jdbcType=INTEGER},
+      user_num = #{userNum,jdbcType=INTEGER},
+      remark = #{remark,jdbcType=VARCHAR},
+      service_score = #{serviceScore,jdbcType=INTEGER},
+      response_score = #{responseScore,jdbcType=INTEGER},
+      is_time_complete = #{isTimeComplete,jdbcType=INTEGER},
+      feedback = #{feedback,jdbcType=VARCHAR},
+      commit_user_sign = #{commitUserSign,jdbcType=VARCHAR},
+      contact_phone = #{contactPhone,jdbcType=VARCHAR},
+      service_done = #{serviceDone,jdbcType=INTEGER},
+      `state` = #{state,jdbcType=INTEGER},
+      commit_time = #{commitTime,jdbcType=TIMESTAMP},
+      feedback_time = #{feedbackTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>
