@@ -55,6 +55,7 @@
     "@tarojs/taro": "3.6.20",
     "axios": "^1.6.2",
     "dayjs": "^1.11.10",
+    "smooth-signature": "^1.0.13",
     "vue": "^3.2.40"
   },
   "devDependencies": {
