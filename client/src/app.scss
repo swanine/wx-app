@@ -2,3 +2,11 @@
   min-height: 100vh;
   background-color: #f7f8fa;
 }
+
+/* 添加这段样式后，Primary Button 会变成绿色 */
+:root,
+page {
+  --nut-radio-label-button-border-color: #498ff2;
+  --nut-radio-label-button-background: #498ff2;
+  --nut-radio-label-font-active-color: #498ff2;
+}
