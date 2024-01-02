@@ -237,6 +237,7 @@ export default {
 
 .nut-sticky .h5-view.nut-cell {
   box-shadow: none;
+  margin: 0;
 
   .date-text {
     display: flex;
