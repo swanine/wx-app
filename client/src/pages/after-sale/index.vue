@@ -4,6 +4,7 @@
       <nut-searchbar
         v-model="value"
         @search="search"
+        @clear="clear"
         placeholder="请输入SC编号"
       >
         <template #rightout>
@@ -159,6 +160,10 @@ export default {
       getList(1, value.value);
     };
 
+    const clear = () => {
+      getList(1);
+    }
+
     const getList = async (offset, scNo = "") => {
       try {
         // if (state.total === dataList.value.lengxth && state.total !== 0) return;
@@ -212,6 +217,7 @@ export default {
       value,
       state,
       search,
+      clear,
       goToDetail,
       dataList,
       toastState,
