@@ -94,7 +94,7 @@
         <template v-if="[1, 2].includes(state)">
           <nut-form-item label="服务态度">
             <nut-rate
-              :readonly="state === 2"
+              :readonly="state === 2 || able === 'r'"
               active-color="#FFC800"
               v-model="formData.serviceScore"
             />
@@ -102,7 +102,7 @@
 
           <nut-form-item label="响应速度">
             <nut-rate
-              :readonly="state === 2"
+              :readonly="state === 2 || able === 'r'"
               active-color="#FFC800"
               v-model="formData.responseScore"
             />
@@ -120,14 +120,14 @@
               v-model="formData.serviceDone"
             >
               <nut-radio
-                :disabled="state === 2"
+                :disabled="state === 2 || able === 'r'"
                 :label="1"
                 shape="button"
                 size="small"
                 >是</nut-radio
               >
               <nut-radio
-                :disabled="state === 2"
+                :disabled="state === 2 || able === 'r'"
                 :label="0"
                 shape="button"
                 size="small"
@@ -148,14 +148,14 @@
               v-model="formData.isTimeComplete"
             >
               <nut-radio
-                :disabled="state === 2"
+                :disabled="state === 2 || able === 'r'"
                 :label="1"
                 shape="button"
                 size="small"
                 >是</nut-radio
               >
               <nut-radio
-                :disabled="state === 2"
+                :disabled="state === 2 || able === 'r'"
                 :label="0"
                 shape="button"
                 size="small"
@@ -170,7 +170,7 @@
               placeholder="请输入意见反馈及评价"
               type="text"
               limit-show
-              :readonly="state === 2"
+              :readonly="state === 2 || able === 'r'"
               max-length="500"
             />
           </nut-form-item>
@@ -188,7 +188,7 @@
               class="nut-input-text"
               v-model="formData.contactPhone"
               placeholder="请输入联系电话"
-              :readonly="state === 2"
+              :readonly="state === 2 || able === 'r'"
               type="text"
             />
           </nut-form-item>
@@ -200,7 +200,7 @@
           >
           </nut-form-item>
           <nut-signature
-            v-if="state !== 2"
+            v-if="state !== 2 && able === 'e'"
             @confirm="confirm"
             @clear="clear"
           ></nut-signature>
@@ -212,7 +212,7 @@
         </template>
 
         <view style="padding-bottom: 20px">
-          <nut-cell v-if="state !== 2">
+          <nut-cell v-if="state !== 2 && able === 'e'">
             <nut-button block type="info" :loading="isLoading" @click="submit"
               >提交</nut-button
             >
@@ -273,6 +273,7 @@ const isShowForm = ref(true);
 const state = ref(0);
 const demoSignUrl = ref("");
 const itemId = ref(0);
+const able = ref('r')
 
 const toastState = reactive({
   msg: "toast",
@@ -286,6 +287,11 @@ onMounted(() => {
   if ($instance.router.params.type === "detail") {
     detail($instance.router.params.id);
   }
+  if ($instance.router.params.able === "e") {
+    able.value = 'e'
+  } else {
+    able.value = 'r'
+  }
 });
 
 useShareAppMessage((e) => {
@@ -293,7 +299,7 @@ useShareAppMessage((e) => {
   console.log(itemId.value);
   return {
     title: "邀请您评价-尚展售后服务评价平台",
-    path: `/pages/after-sale-form/index?id=${itemId.value}&type=detail`,
+    path: `/pages/after-sale-form/index?id=${itemId.value}&type=detail&able=e`,
   };
 });
 
