@@ -4,22 +4,12 @@
       :init-page="page"
       :loop="true"
       auto-play="3000"
-      direction="vertical"
       height="180"
       :pagination-visible="true"
       style="height: 180px"
     >
-      <nut-swiper-item>
-        <img src="http://www.szmold.cn/PicFile/1508480829.jpg" alt="" />
-      </nut-swiper-item>
-      <nut-swiper-item>
-        <img src="http://www.szmold.cn/PicFile/1508481684.jpg" alt="" />
-      </nut-swiper-item>
-      <nut-swiper-item>
-        <img src="http://www.szmold.cn/PicFile/1511494135.jpg" alt="" />
-      </nut-swiper-item>
-      <nut-swiper-item>
-        <img src="http://www.szmold.cn/PicFile/1511422289.jpg" alt="" />
+      <nut-swiper-item v-for="item in swiperImgUrl" :key="item">
+        <img :src="item" />
       </nut-swiper-item>
     </nut-swiper>
 
@@ -29,22 +19,18 @@
           <span class="title" style="color: #111">基础服务</span>
 
           <view class="feature">
-            <view class="item" @tap="goToAfterSaleForm">
-              <img :src="p1" />
-              <view class="item-name">售后单</view>
-            </view>
-
-            <view class="item" @tap="goToAfterSale">
-              <img :src="p2" />
-              <view class="item-name">售后查询</view>
+            <view
+              class="item"
+              v-for="icon in iconList"
+              :key="icon.label"
+              @tap="goToPath(icon.path)"
+            >
+              <img :src="icon.img" />
+              <view class="item-name">{{ icon.label }}</view>
             </view>
           </view>
         </template>
       </nut-cell>
-
-      <!-- <view class="title">基础服务</view>
-    
-    </view> -->
     </view>
 
     <view class="card">
@@ -66,108 +52,55 @@
 </template>
 
 <script>
-import { reactive, toRefs } from "vue";
 import Taro from "@tarojs/taro";
-import p1 from "../../assets/icon_ojo2eobsn7/dengji.svg";
-import p2 from "../../assets/icon_ojo2eobsn7/baogaosousuo.svg";
+import p1 from "../../assets/icon_ojo2eobsn7/shouhoudan.svg";
+import p2 from "../../assets/icon_ojo2eobsn7/shouhouchaxun.svg";
+import p3 from "../../assets/icon_ojo2eobsn7/gongzuoribao.svg";
+import p4 from "../../assets/icon_ojo2eobsn7/ribaochaxun.svg";
 
 export default {
   name: "Index",
-  components: {},
   setup() {
-    const state = reactive({
-      msg: "欢迎使用 NutUI4.0 开发小程",
-      msg2: "你成功了～666",
-      type: "text",
-      page: 2,
-      show: false,
-      cover: false,
-    });
+    const swiperImgUrl = [
+      "http://www.szmold.cn/PicFile/1508480829.jpg",
+      "http://www.szmold.cn/PicFile/1508481684.jpg",
+      "http://www.szmold.cn/PicFile/1511494135.jpg",
+      "http://www.szmold.cn/PicFile/1511422289.jpg",
+    ];
 
-    const tabSwitch = (item, index) => {
-      console.log(item, index);
-      if (index === 1) {
-        Taro.navigateTo({
-          url: "/pages/my/my",
-        });
-      }
-    };
+    const iconList = [
+      {
+        label: "售后单",
+        img: p1,
+        path: "after-sale-form/index?able=e",
+      },
+      {
+        label: "售后查询",
+        img: p2,
+        path: "after-sale/index",
+      },
+      {
+        label: "工作日报",
+        img: p3,
+        path: "work-log/index?able=e",
+      },
+      {
+        label: "日报查询",
+        img: p4,
+        path: "work-log-search/index",
+      },
+    ];
 
-    const goToAfterSale = () => {
+    const goToPath = (path) => {
       Taro.navigateTo({
-        url: "/pages/after-sale/index",
-      });
-    };
-
-    const goToAfterSaleForm = () => {
-      // Taro.getSetting({
-      //   success: (res) => {
-      //     if (res.authSetting["scope.userInfo"]) {
-      //       // 用户已经授权过，可以直接获取用户信息
-      //       getUserInfo();
-      //     } else {
-      //       // 用户未授权，需要弹出授权窗口
-      //       showAuthModal();
-      //     }
-      //     console.log(res);
-      //   },
-      // });
-
-      Taro.navigateTo({
-        url: "/pages/after-sale-form/index?able=e",
-      });
-    };
-
-    const showAuthModal = () => {
-      Taro.showModal({
-        title: "授权提示",
-        content: "需要获取您的用户信息",
-        confirmText: "去授权",
-        cancelText: "取消",
-        success: (res) => {
-          if (res.confirm) {
-            // 用户点击确认，打开授权设置页面
-            openSetting();
-          }
-        },
-      });
-    };
-
-    const openSetting = () => {
-      // Taro.openSetting：调起客户端小程序设置界面，返回用户设置的操作结果。设置界面只会出现小程序已经向用户请求过的权限。
-      Taro.openSetting({
-        success: (res) => {
-          if (res.authSetting["scope.userInfo"]) {
-            // 用户授权成功，可以获取用户信息
-            getUserInfo();
-          } else {
-            // 用户拒绝授权，提示授权失败
-            Taro.showToast({
-              title: "授权失败",
-              icon: "none",
-            });
-          }
-        },
-      });
-    };
-
-    const getUserInfo = () => {
-      Taro.getUserInfo({
-        success: (res) => {
-          const { encryptedData, iv } = res;
-          // 在这里将 encryptedData 和 iv 传给后端解密获取用户信息
-          console.log(res);
-        },
+        url: "/pages/" + path,
       });
     };
 
     return {
-      ...toRefs(state),
-      tabSwitch,
-      goToAfterSale,
-      goToAfterSaleForm,
-      p1,
-      p2,
+      swiperImgUrl,
+      iconList,
+      goToPath,
     };
   },
 };
