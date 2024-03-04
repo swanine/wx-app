@@ -58,7 +58,7 @@
             <span>{{ item.employeeName }}</span>
           </template>
           <template #title>
-            <custem-listitem :itemData="item" />
+            <custem-listitem :itemData="item" tag="sale" />
           </template>
         </nut-cell>
       </nut-cell-group>
@@ -162,7 +162,7 @@ export default {
 
     const clear = () => {
       getList(1);
-    }
+    };
 
     const getList = async (offset, scNo = "") => {
       try {
