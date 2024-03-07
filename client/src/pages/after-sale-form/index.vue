@@ -1,21 +1,30 @@
 <template>
   <view class="page">
     <template v-if="isShowForm">
-      <view class="title">{{
-        [1, 2].includes(state)
-          ? "来自项目 — " + formData.projectName
-          : "新建售后评价单"
-      }}</view>
+      <view class="title">
+        <view class="left">
+          {{
+            [1, 2].includes(state)
+              ? "来自项目 — " + formData.projectName
+              : "新建售后评价单"
+          }}
+        </view>
+        <view class="right">
+          {{ createDate }}
+        </view>
+      </view>
       <nut-form
         :model-value="formData"
         :rules="{
           projectName: [{ required: true, message: '请填写项目名称' }],
+          something: [{ required: true, message: '请填写处理事项' }],
           scNo: [{ required: true, message: '请填写sc编号' }],
           employeeName: [{ required: true, message: '请填写员工姓名' }],
         }"
         ref="ruleForm"
       >
         <!-- =========基本信息=========== -->
+
         <template v-if="[0, 2].includes(state)">
           <nut-form-item label="项目名称" prop="projectName">
             <nut-input
@@ -23,6 +32,17 @@
               @blur="customBlurValidate('projectName')"
               v-model="formData.projectName"
               placeholder="请输入项目名称"
+              :readonly="state > 1"
+              type="text"
+            />
+          </nut-form-item>
+
+          <nut-form-item label="客户名称" prop="customName">
+            <nut-input
+              class="nut-input-text"
+              @blur="customBlurValidate('customName')"
+              v-model="formData.customName"
+              placeholder="请输入客户名称"
               :readonly="state > 1"
               type="text"
             />
@@ -77,14 +97,23 @@
               type="number"
             />
           </nut-form-item>
+
+          <nut-form-item label="处理事项" prop="something">
+            <nut-input
+              class="nut-input-text"
+              v-model="formData.something"
+              placeholder="请输入处理事项"
+              :readonly="state > 1"
+              type="text"
+            />
+          </nut-form-item>
         </template>
 
         <nut-form-item label="备注">
           <nut-textarea
             v-model="formData.remark"
             placeholder="请输入备注"
-            type="text"
-            limit-show
+            :limit-show="state < 1"
             :readonly="state >= 1"
             max-length="500"
           />
@@ -168,8 +197,7 @@
             <nut-textarea
               v-model="formData.feedback"
               placeholder="请输入意见反馈及评价"
-              type="text"
-              limit-show
+              :limit-show="state === 1 && able === 'e'"
               :readonly="state === 2 || able === 'r'"
               max-length="500"
             />
@@ -181,7 +209,7 @@
             required
             :rules="[
               { required: true, message: '请填写联系电话' },
-              // { validator: asyncValidator, message: '电话格式不正确' },
+              // { regex: /^1[3-9]\d{9}$/, message: '电话格式不正确' },
             ]"
           >
             <nut-input
@@ -221,9 +249,14 @@
       </nut-form>
     </template>
 
-    <!-- <view class="success-page"> -->
-      <view class="success-page" v-else>
-      <Checked size="100" color="#07c160"></Checked>
+    <view class="success-page" v-else>
+      <Checked size="50" color="#07c160"></Checked>
+      <canvas
+        v-if="state !== 1"
+        type="2d"
+        style="width: 260px; height: 260px"
+        id="myQrcode"
+      ></canvas>
       <view>
         {{ state == 1 ? "感谢您的评价" : "创建完成，点击右上角立即分享" }}
       </view>
@@ -242,21 +275,26 @@
   </view>
 </template>
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, nextTick } from "vue";
 import { Checked } from "@nutui/icons-vue-taro";
-import Taro, { useShareAppMessage } from "@tarojs/taro";
+import Taro, { useShareAppMessage, useLoad } from "@tarojs/taro";
 import { getEvaluateDetail, addEvaluate, feedback } from "../../api";
 import { getBase64ByFilePath } from "../../utils/base64";
+import drawQrcode from "weapp-qrcode-canvas-2d";
+import * as dayjs from "dayjs";
 
 const $instance = Taro.getCurrentInstance();
 
 const formData = reactive({
   projectName: "", // 项目名称
+  customName: "", //客户名称
   scNo: "", //sc编号
   deviceNum: "", //设备数量
   employeeName: "", //员工姓名
   userNum: "", //人数
+  something: "", //处理事项
   remark: "", //备注
+  // pic: "", //图片上传
   serviceScore: "", //服务态度
   responseScore: "", //响应速度
   isTimeComplete: "", //是否在规定时间内完成 0-否，1-是
@@ -271,9 +309,11 @@ const ruleForm = ref(null);
 const isLoading = ref(false);
 const isShowForm = ref(true);
 const state = ref(0);
+const createDate = ref(dayjs().format("YYYY-MM-DD"));
 const demoSignUrl = ref("");
 const itemId = ref(0);
-const able = ref('r')
+const able = ref("r");
+const qrUrl = ref("");
 
 const toastState = reactive({
   msg: "toast",
@@ -282,15 +322,83 @@ const toastState = reactive({
   cover: false,
 });
 
+const getCode = () => {
+  const query = Taro.createSelectorQuery();
+  query
+    .select("#myQrcode")
+    .fields({
+      node: true,
+      size: true,
+    })
+    .exec((res) => {
+      var canvas = res[0].node;
+
+      // 调用方法drawQrcode生成二维码
+      drawQrcode({
+        canvas: canvas,
+        canvasId: "myQrcode",
+        width: 260,
+        padding: 30,
+        background: "#ffffff",
+        foreground: "#000000",
+        text: qrUrl.value,
+      });
+
+      // 获取临时路径（得到之后，想干嘛就干嘛了）
+      Taro.canvasToTempFilePath({
+        canvasId: "myQrcode",
+        canvas: canvas,
+        x: 0,
+        y: 0,
+        width: 260,
+        height: 260,
+        destWidth: 260,
+        destHeight: 260,
+        success(res) {
+          console.log("二维码临时路径：", qrUrl.value);
+        },
+        fail(res) {
+          console.error(res);
+        },
+      });
+    });
+};
+
 onMounted(() => {
   console.log($instance.router.params);
-  if ($instance.router.params.type === "detail") {
-    detail($instance.router.params.id);
+  const params = $instance.router.params;
+
+  if (params.type === "detail") {
+    detail(params.id);
   }
-  if ($instance.router.params.able === "e") {
-    able.value = 'e'
+
+  if (params.able === "e") {
+    able.value = "e";
   } else {
-    able.value = 'r'
+    able.value = "r";
+  }
+
+  if (params.j === "w") {
+    const { p, c, sc, e, s } = params;
+    formData.projectName = p;
+    formData.customName = c;
+    formData.scNo = sc;
+    formData.employeeName = e;
+    formData.something = s;
+  }
+});
+
+// 页面加载完成时的回调。
+// @supported — weapp, h5
+useLoad((query) => {
+  const q = decodeURIComponent(query.q); // 获取到二维码原始链接内容
+  const scancode_time = parseInt(query.scancode_time); // 获取用户扫码时间 UNIX 时间戳
+
+  console.log(q, scancode_time);
+  if (scancode_time) {
+    const id = q.match(/\?id=(.*)/);
+    able.value = "e";
+    detail(id[1]);
   }
 });
 
@@ -307,24 +415,31 @@ useShareAppMessage((e) => {
 const detail = async (ids) => {
   try {
     openToast("loading", "加载中", true);
-    const { code, data, message } = await getEvaluateDetail(ids);
+    const { code, data } = await getEvaluateDetail(ids);
     if (code === 200) {
       formData.commitUserSign = data.commitUserSign;
       demoSignUrl.value = data.commitUserSign;
       formData.contactPhone = data.contactPhone;
       formData.deviceNum = data.deviceNum;
       formData.employeeName = data.employeeName;
-      formData.feedback = data.feedback;
+      formData.feedback = data.feedback || "";
       formData.isTimeComplete = data.isTimeComplete;
       formData.projectName = data.projectName;
-      formData.remark = data.remark;
+      formData.customName = data.customName;
+      formData.something = data.something;
+      formData.remark = data.remark || "";
       formData.responseScore = data.responseScore;
       formData.scNo = data.scNo;
       formData.serviceDone = data.serviceDone;
       formData.serviceScore = data.serviceScore;
       formData.userNum = data.userNum;
+
+      createDate.value = dayjs(data.commitTime).format("YYYY-MM-DD HH:mm:ss");
       state.value = data.state;
       itemId.value = data.id;
+      if (state.value === 2) {
+        able.value = "r";
+      }
     }
   } catch (error) {
     console.log(error);
@@ -346,6 +461,8 @@ const submit = () => {
         projectName: formData.projectName,
         scNo: formData.scNo,
         deviceNum: formData.deviceNum,
+        something: formData.something,
+        customName: formData.customName,
         employeeName: formData.employeeName,
         userNum: formData.userNum,
         remark: formData.remark,
@@ -369,8 +486,9 @@ const submit = () => {
         (res) => {
           if (res.data) {
             itemId.value = res.data;
+            qrUrl.value = `https://www.swanine.com/szweapp?id=${res.data}`;
+            getCode();
           }
-          console.log(res);
           isLoading.value = false;
           isShowForm.value = false;
           toastState.show = false;
@@ -407,24 +525,6 @@ const customValidator = (val) => {
   }
 };
 
-// Promise 异步校验
-const asyncValidator = (val) => {
-  const telReg = /^400(-?)[0-9]{7}$|^1\d{10}$|^0[0-9]{2,3}-[0-9]{7,8}$/;
-  return new Promise((resolve, reject) => {
-    showToast.loading("模拟异步验证中...");
-    setTimeout(() => {
-      showToast.hide();
-      if (!val) {
-        reject("请输入联系电话");
-      } else if (!telReg.test(val)) {
-        reject("联系电话格式不正确");
-      } else {
-        resolve("");
-      }
-    }, 1000);
-  });
-};
-
 const openToast = (type, msg, cover = false) => {
   toastState.show = true;
   toastState.msg = msg;
@@ -441,7 +541,6 @@ const confirm = (canvas, data) => {
   getBase64ByFilePath(data).then(
     (res) => {
       demoSignUrl.value = res.base64Url;
-      // console.log(res);
     },
     (err) => {
       console.log(err);
@@ -464,6 +563,8 @@ const backList = () => {
 
 <style lang="scss">
 .title {
+  display: flex;
+  justify-content: space-between;
   color: rgb(144, 156, 164);
   font-size: 0.8rem;
   font-weight: 400;
@@ -481,5 +582,9 @@ const backList = () => {
   flex-direction: column;
   /* justify-content: center; */
   align-items: center;
+}
+
+.nut-textarea__textarea__readonly {
+  padding: 0;
 }
 </style>
