@@ -6,7 +6,7 @@
  * @swanine 2023-12-14
  */
 
-let BASE_URL = 'https://swanine.com/api'
+let BASE_URL = ''
 const TIME_OUT = 10000
 
 export { BASE_URL, TIME_OUT }
